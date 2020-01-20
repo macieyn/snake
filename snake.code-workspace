@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"snake.h": "c",
+			"functions_unittests.h": "c"
+		}
+	}
+}
