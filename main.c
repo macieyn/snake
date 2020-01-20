@@ -12,34 +12,85 @@ char screen[8] = {
     0b00000000,
     0b00000000,
     0b00000000,
-    0b00000000,
+    0b0000000,
 };
 
-struct Snake
-{
-    int x;
-    int y;
-    int tail;
-};
 
-struct Point {
+struct Coord {
     int x;
     int y;
 };
 
-void clear_display(char display[], int size)
+
+struct Snake {
+    int tail_length;  
+    struct Coord tail[10];
+    char dir;
+};
+
+void print_snake(struct Snake *snake)
 {
-    for (int i=0 ; i<size; i++) display[i] = 0b0;
+    int head_x = snake->tail[0].x;
+    int head_y = snake->tail[0].y;
+    int length = snake->tail_length;
+    printf("\nSnake:\n--------------\nX: %d\nY: %d\nLen: %d\n", head_x, head_y, length);
 }
 
-int go_to_point(struct Point *point, struct Snake *snake)
+void update_tail(struct Snake *snake) {
+    for(int i=snake->tail_length; i>0; i--) {
+        snake->tail[i] = snake->tail[i-1];
+    }
+};
+
+struct Food {
+    struct Coord position;
+};
+
+
+void clear_display(char display[])
 {
-    if (point->x == snake->x && point->y == snake->y) return 1; 
-    if (point->x > snake->x) snake->x ++;
-    else if (point->x < snake->x) snake->x --;
-    else if (point->y > snake->y) snake->y ++;
-    else if (point->y < snake->y) snake->y --;
-    return 0;
+    for (int i=0 ; i<8; i++) display[i] = 0b0;
+}
+
+int go_to_point(struct Food food[], struct Snake *snake, int current_target)
+{
+    // TODO: Sprawdzić czy wąż nie wchodzi na siebie
+
+    int result = 0;
+
+    // sprawdzam czy punkt został osiągnięty
+    if (food[current_target].position.x == snake->tail[0].x && food[current_target].position.y == snake->tail[0].y){
+        snake->tail_length ++;
+        current_target ++; 
+        printf("\nFood!\n");
+        result = 1;
+    }
+
+    // ustawiam kierunek ruchu
+    if (food[current_target].position.x > snake->tail[0].x){
+        snake->tail[0].x ++;
+        // snake->dir = 'r';
+    }
+    else if (food->position.x < snake->tail[0].x){
+        snake->tail[0].x --;
+        // snake->dir = 'l';
+    }
+    else if (food->position.y > snake->tail[0].y){
+        snake->tail[0].y ++;
+        // snake->dir = 'u';
+    }
+    else if (food->position.y < snake->tail[0].y){
+        snake->tail[0].y --;
+        // snake->dir = 'd';
+    }
+    // else {
+    //     if (snake->dir == 'u') snake->tail[0].y ++;
+    //     if (snake->dir == 'd') snake->tail[0].y --;
+    //     if (snake->dir == 'l') snake->tail[0].x --;
+    //     if (snake->dir == 'r') snake->tail[0].x ++;
+    // }
+
+    return result;
 }
 
 void render_screen(char my_screen[])
@@ -57,64 +108,88 @@ void render_screen(char my_screen[])
     printf("----------------\n");
 }
 
+void set_screen(struct Food food[], struct Snake *snake, int current_target)
+{
+    for (int i=0; i<8; i++)
+    {
+        for (int j=7; j>=0; j--)
+        {   
+            if (food[current_target].position.x == i && food[current_target].position.y == j)
+            {
+                    char row = screen[i];
+                    row = 1 << j;
+                    screen[i] |= row; 
+            }
+
+            for (int k=0; k<10; k++)
+            {
+                if (snake->tail[k].x == i && snake->tail[k].y == j)
+                {
+                    char row = screen[i];
+                    row = 1 << j;
+                    screen[i] |= row; 
+                }
+            }
+        }
+    }
+}
+
+void print_tail(struct Snake *snake)
+{
+    for (int i=0; i<10; i++) {
+        printf("X: %d, Y: %d\n", snake->tail[i].x, snake->tail[i].y); 
+    }
+}
+
 int main()
 {
     printf("Hello SNAKE!\n\n");
-    struct Snake snake = {3, 3, 0};
-    struct Point points[5];
+    struct Coord init[10] = { {3, 3}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+    struct Snake snake = {0, *init, 'd'};
+    struct Food food[5];
 
     int result = 0;
     for (int i=0; i<5; i++)
     {
-        points[i].x = rand() % 8;
-        points[i].y = rand() % 8;
+        food[i].position.x = rand() % 8;
+        food[i].position.y = rand() % 8;
     }
 
-    int current_point = 0;
+    int current_target = 0;
 
-    while (result == -1 || current_point < 5)
+    while (result == -1 || current_target < 5)
     {
-        
-        if (snake.x <= -1 || snake.x >= 8 || snake.y <= -1 || snake.y >= 8) result = -1;
         // Sleep(1000); // for windows
+        // system("cls");
+        
         usleep(500000); // for Unix
         system("clear");
+        
         printf("Welcome to SNAKE!\n");
-        printf("Your score: %d", current_point);
+        printf("Your score: %d", current_target);
 
-        clear_display(screen, 8);
-
-        for (int i=0; i<8; i++)
-        {
-            for (int j=7; j>=0; j--)
-            {   
-                if (points[current_point].x == i && points[current_point].y == j)
-                {
-                        char row = screen[i];
-                        row = 1 << j;
-                        screen[i] |= row; 
-                }
-                
-                if (snake.x == i && snake.y == j)
-                {
-                        char row = screen[i];
-                        row = 1 << j;
-                        screen[i] |= row; 
-                }
-            }
-        }
-
+        clear_display(screen);
+        set_screen(food, &snake, current_target);
         render_screen(screen);
 
-        printf("Snake position: %i, %i\n", snake.x, snake.y);
-        printf("Point position: %i, %i\n", points[current_point].x, points[current_point].y);
+        printf("Snake position: %i, %i\n", snake.tail[0].x, snake.tail[0].y);
+        printf("Point position: %i, %i\n", food[current_target].position.x, food[current_target].position.y);
 
-        result = go_to_point(&points[current_point], &snake);
+        print_tail(&snake);
+
+        update_tail(&snake);
+
+        result = go_to_point(food, &snake, current_target);
+
+        if (snake.tail[0].x <= -1 || snake.tail[0].x >= 8 || snake.tail[0].y <= -1 || snake.tail[0].y >= 8) break;
+
         if (result == 1)
         {
-            snake.tail ++;
-            current_point ++;
+            snake.tail_length ++;
+            current_target ++;
         }
+
+        print_snake(&snake);
     }
 
     printf("The END!");
