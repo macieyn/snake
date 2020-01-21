@@ -3,31 +3,32 @@
 
 #include <stdio.h>
 
+#define UP 'w'
+#define DOWN 's'
+#define LEFT 'a'
+#define RIGHT 'd'
+
 typedef struct Coord {
     int x;
     int y;
 } Coord;
 
-typedef struct Food {
-    Coord position[5];
-} Food;
-
 typedef struct Snake {
     int length;  
-    Coord body[10];
+    Coord body[64];
     char direction;
 } Snake; 
 
-int check_if_not_overlapping(Snake *snake, int x, int y);
+int  change_direction(Snake *snake, char direction);
 void clear_display(char display[]);
-int food_reached(Snake *snake, Coord *food);
-int move_head(Snake *snake, Food food[], int current_target);
-int overlap_check(Snake *snake, int x, int y);
-void print_snake(Snake *snake);
-void print_tail_info(Snake *snake);
+int  food_reached(Snake *snake, Coord *food);
+int  move_head(Snake *snake);
+int  overlap_check(Snake *snake);
+void random_food(Coord *food);
 void render_screen(char my_screen[]);
-void set_screen(Food food[], Snake *snake, int current_target);
+void set_screen(Coord *food, Snake *snake);
 void update_tail(Snake *snake);
+int  wall_hit(Snake *snake);
 
 char screen[8];
 
